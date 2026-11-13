@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Ảnh Thẻ Pro 3x4 & 4x6</title>
+  <meta name="theme-color" content="#1e40af" />
+  <link rel="manifest" href="data:application/manifest+json,{"name":"Ảnh Thẻ Pro","short_name":"Ảnh Thẻ","start_url":".","display":"standalone","background_color":"#ffffff","theme_color":"#1e40af"}" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen font-sans select-none">
+  <div class="max-w-md mx-auto bg-white min-h-screen shadow-xl flex flex-col justify-between">
+    <!-- Header -->
+    <header class="bg-blue-700 text-white p-4 flex items-center justify-between shadow-md">
+      <div>
+        <h1 class="text-lg font-bold">📸 Ảnh Thẻ Pro VN</h1>
+        <p class="text-xs text-blue-100">Tạo ảnh 3×4, 4×6 chuẩn quốc tế</p>
+      </div>
+      <span id="vipBadge" class="bg-amber-400 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-full">Bản Miễn Phí</span>
+    </header>
+
+    <!-- Main Content -->
+    <main class="p-4 flex-1 space-y-4">
+      <!-- Nút Chọn / Chụp Ảnh -->
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="startCamera()" class="bg-blue-600 active:bg-blue-700 text-white font-semibold py-2.5 px-3 rounded-xl text-sm flex items-center justify-center gap-1 shadow">
+          📷 Bật Camera Chụp
+        </button>
+        <label class="bg-slate-800 active:bg-slate-900 text-white font-semibold py-2.5 px-3 rounded-xl text-sm flex items-center justify-center gap-1 shadow cursor-pointer text-center">
+          🖼️ Chọn Ảnh Có Sẵn
+          <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileUpload(event)" />
+        </label>
+      </div>
+
+      <!-- Khung Camera trực tiếp (Ẩn mặc định) -->
+      <div id="cameraBox" class="hidden relative bg-black rounded-2xl overflow-hidden aspect-[3/4] max-w-[260px] mx-auto border-2 border-blue-500">
+        <video id="video" autoplay playsinline class="w-full h-full object-cover transform scale-x-[-1]"></video>
+        <!-- Khung căn mặt & vai -->
+        <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+          <div class="w-32 h-40 border-2 border-dashed border-emerald-400 rounded-full mb-6"></div>
+          <div class="w-52 h-16 border-t-2 border-dashed border-emerald-400 rounded-t-3xl"></div>
+          <span class="absolute bottom-14 bg-black/60 text-white text-[11px] px-2 py-0.5 rounded">Căn đầu và vai vào khung xanh</span>
+        </div>
+        <div class="absolute bottom-2 inset-x-0 flex justify-center gap-3">
+          <button onclick="takeSnapshot()" class="bg-emerald-500 text-white font-bold px-5 py-1.5 rounded-full text-sm shadow-lg">Chụp Ngay</button>
+          <button onclick="stopCamera()" class="bg-red-500 text-white px-3 py-1.5 rounded-full text-xs">Đóng</button>
+        </div>
+      </div>
+
+      <!-- Khung Canvas Hiển Thị Ảnh -->
+      <div class="bg-slate-50 border rounded-2xl p-3 flex flex-col items-center">
+        <div class="flex gap-2 mb-2 w-full justify-center">
+          <button onclick="setMode('single')" id="btnSingle" class="px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white">Ảnh Đơn</button>
+          <button onclick="setMode('sheet')" id="btnSheet" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-200 text-slate-700">Ghép Trang In (10×15cm)</button>
+        </div>
+        <canvas id="photoCanvas" width="354" height="472" class="shadow-md border border-slate-300 bg-white max-w-[220px] h-auto rounded"></canvas>
+        <p class="text-[11px] text-slate-500 mt-2 text-center">⚠️ Lưu ý: Vui lòng kiểm tra yêu cầu phông nền của nơi nhận hồ sơ.</p>
+      </div>
+
+      <!-- Bảng Điều Khiển Chỉnh Sửa -->
+      <div class="bg-slate-50 p-3 rounded-2xl border space-y-3 text-sm">
+        <!-- Kích thước & Phông nền -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-xs text-slate-600 block mb-1">Kích thước:</label>
+            <div class="flex gap-1">
+              <button onclick="setSize('3x4')" id="size3x4" class="flex-1 py-1.5 rounded bg-blue-600 text-white font-bold text-xs">3×4 cm</button>
+              <button onclick="setSize('4x6')" id="size4x6" class="flex-1 py-1.5 rounded bg-slate-200 text-slate-700 font-bold text-xs">4×6 cm</button>
+            </div>
+          </div>
+          <div>
+            <label class="font-semibold text-xs text-slate-600 block mb-1">Đổi màu nền:</label>
+            <div class="flex gap-1.5 items-center h-8">
+              <button onclick="setBg('#1e62d0')" class="w-7 h-7 rounded-full bg-[#1e62d0] border-2 border-slate-300 shadow" title="Xanh chuẩn"></button>
+              <button onclick="setBg('#ffffff')" class="w-7 h-7 rounded-full bg-white border-2 border-slate-400 shadow" title="Nền trắng"></button>
+              <button onclick="setBg('#38bdf8')" class="w-7 h-7 rounded-full bg-sky-400 border-2 border-slate-300 shadow" title="Xanh nhạt"></button>
+              <label class="text-xs flex items-center gap-1 ml-1 cursor-pointer">
+                <input type="checkbox" id="autoBgToggle" onchange="renderCanvas()" checked /> Tách nền
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chỉnh vị trí, phóng to & độ sáng -->
+        <div class="space-y-2 pt-1 border-t">
+          <div class="flex items-center justify-between text-xs">
+            <span>Phóng to / Thu nhỏ:</span>
+            <input type="range" id="zoomRange" min="0.5" max="2.5" step="0.05" value="1" oninput="renderCanvas()" class="w-36" />
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span>Căn lên / xuống:</span>
+            <input type="range" id="offsetYRange" min="-150" max="150" step="2" value="0" oninput="renderCanvas()" class="w-36" />
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span>Làm sáng da (Beauty):</span>
+            <input type="range" id="brightRange" min="90" max="140" step="2" value="105" oninput="renderCanvas()" class="w-36" />
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span>Ghép trang phục:</span>
+            <select id="suitSelect" onchange="renderCanvas()" class="border rounded px-2 py-1 text-xs bg-white">
+              <option value="none">Giữ áo gốc</option>
+              <option value="shirt">Sơ mi trắng có cổ</option>
+              <option value="vest">Áo Vest đen + Cà vạt</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Khu vực Tải ảnh & Kiếm tiền (Monetization) -->
+      <div class="space-y-2 pt-1">
+        <button onclick="downloadPhoto()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
+          ⬇️ Tải Ảnh Về Máy (Lượt tải HD: <span id="creditCount">1</span>)
+        </button>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="watchAd()" class="bg-amber-500 active:bg-amber-600 text-white text-xs font-bold py-2.5 px-2 rounded-xl shadow">
+            🎬 Xem QC (+1 lượt tải)
+          </button>
+          <button onclick="openVipModal()" class="bg-purple-600 active:bg-purple-700 text-white text-xs font-bold py-2.5 px-2 rounded-xl shadow">
+            👑 Mở Khóa VIP (10.000đ)
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Thanh Toán VietQR 10k -->
+  <div id="vipModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl p-5 max-w-xs w-full text-center space-y-3">
+      <h3 class="font-bold text-lg text-purple-700">👑 Mở Khóa VIP Vĩnh Viễn</h3>
+      <p class="text-xs text-slate-600">Chỉ <b>10.000đ</b> - Xóa logo mờ, tải ảnh 3×4, 4×6 và trang in 10×15cm nét cao không giới hạn.</p>
+      <div class="bg-slate-100 p-3 rounded-xl text-xs text-left space-y-1">
+        <p><b>Ngân hàng:</b> MB Bank / MoMo</p>
+        <p><b>Số TK:</b> 09xxxxxxxx (Thay số của bạn)</p>
+        <p><b>Nội dung:</b> VIP ANHTHE</p>
+      </div>
+      <button onclick="activateVip()" class="w-full bg-purple-600 text-white font-bold py-2.5 rounded-xl text-sm">Tôi Đã Chuyển Khoản (Kích Hoạt)</button>
+      <button onclick="closeVipModal()" class="text-xs text-slate-400 underline">Đóng lại</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('photoCanvas');
+    const ctx = canvas.getContext('2d');
+    let userImg = null;
+    let currentSize = '3x4';
+    let bgColor = '#1e62d0';
+    let viewMode = 'single'; // 'single' | 'sheet'
+    let credits = 1;
+    let isVip = false;
+    let stream = null;
+
+    // Tạo ảnh mẫu ban đầu
+    window.onload = () => { renderCanvas(); };
+
+    function setSize(size) {
+      currentSize = size;
+      document.getElementById('size3x4').className = size === '3x4' ? 'flex-1 py-1.5 rounded bg-blue-600 text-white font-bold text-xs' : 'flex-1 py-1.5 rounded bg-slate-200 text-slate-700 font-bold text-xs';
+      document.getElementById('size4x6').className = size === '4x6' ? 'flex-1 py-1.5 rounded bg-blue-600 text-white font-bold text-xs' : 'flex-1 py-1.5 rounded bg-slate-200 text-slate-700 font-bold text-xs';
+      renderCanvas();
+    }
+
+    function setBg(color) { bgColor = color; renderCanvas(); }
+
+    function setMode(mode) {
+      viewMode = mode;
+      document.getElementById('btnSingle').className = mode === 'single' ? 'px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white' : 'px-3 py-1 rounded-lg text-xs font-bold bg-slate-200 text-slate-700';
+      document.getElementById('btnSheet').className = mode === 'sheet' ? 'px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white' : 'px-3 py-1 rounded-lg text-xs font-bold bg-slate-200 text-slate-700';
+      renderCanvas();
+    }
+
+    async function startCamera() {
+      try {
+        document.getElementById('cameraBox').classList.remove('hidden');
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        document.getElementById('video').srcObject = stream;
+      } catch (e) {
+        alert('Không thể mở camera trực tiếp. Hãy chọn nút "Chọn Ảnh Có Sẵn" để chụp từ máy ảnh điện thoại!');
+      }
+    }
+
+    function stopCamera() {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      document.getElementById('cameraBox').classList.add('hidden');
+    }
+
+    function takeSnapshot() {
+      const video = document.getElementById('video');
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = video.videoWidth;
+      tempCanvas.height = video.videoHeight;
+      const tCtx = tempCanvas.getContext('2d');
+      tCtx.translate(tempCanvas.width, 0);
+      tCtx.scale(-1, 1);
+      tCtx.drawImage(video, 0, 0);
+      const img = new Image();
+      img.onload = () => { userImg = img; stopCamera(); renderCanvas(); };
+      img.src = tempCanvas.toDataURL('image/png');
+    }
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => { userImg = img; renderCanvas(); };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function drawSinglePhoto(targetCtx, w, h) {
+      targetCtx.fillStyle = bgColor;
+      targetCtx.fillRect(0, 0, w, h);
+
+      const zoom = parseFloat(document.getElementById('zoomRange').value);
+      const offsetY = parseFloat(document.getElementById('offsetYRange').value);
+      const bright = document.getElementById('brightRange').value;
+      const suit = document.getElementById('suitSelect').value;
+
+      if (userImg) {
+        const offscreen = document.createElement('canvas');
+        offscreen.width = w; offscreen.height = h;
+        const oCtx = offscreen.getContext('2d');
+        oCtx.filter = `brightness(${bright}%) contrast(104%)`;
+
+        const scale = Math.max(w / userImg.width, h / userImg.height) * zoom;
+        const nw = userImg.width * scale;
+        const nh = userImg.height * scale;
+        oCtx.drawImage(userImg, (w - nw) / 2, (h - nh) / 2 + offsetY, nw, nh);
+
+        // Tách nền sáng màu tự động
+        if (document.getElementById('autoBgToggle').checked) {
+          const imgData = oCtx.getImageData(0, 0, w, h);
+          const d = imgData.data;
+          const r0 = d[0], g0 = d[1], b0 = d[2];
+          for (let i = 0; i < d.length; i += 4) {
+            const diff = Math.abs(d[i] - r0) + Math.abs(d[i+1] - g0) + Math.abs(d[i+2] - b0);
+            if (diff < 65) d[i+3] = 0;
+          }
+          oCtx.putImageData(imgData, 0, 0);
+        }
+        targetCtx.drawImage(offscreen, 0, 0);
+      } else {
+        // Hình mẫu mặc định
+        targetCtx.fillStyle = 'rgba(255,255,255,0.85)';
+        targetCtx.beginPath(); targetCtx.arc(w/2, h*0.38, w*0.22, 0, Math.PI*2); targetCtx.fill();
+        targetCtx.beginPath(); targetCtx.arc(w/2, h*0.95, w*0.42, Math.PI, 0); targetCtx.fill();
+      }
+
+      // Ghép Áo Sơ mi / Áo Vest
+      if (suit === 'shirt') {
+        targetCtx.fillStyle = '#f8fafc';
+        targetCtx.beginPath();
+        targetCtx.moveTo(w*0.1, h); targetCtx.lineTo(w*0.25, h*0.72);
+        targetCtx.lineTo(w*0.5, h*0.84); targetCtx.lineTo(w*0.75, h*0.72);
+        targetCtx.lineTo(w*0.9, h); targetCtx.fill();
+      } else if (suit === 'vest') {
+        targetCtx.fillStyle = '#ffffff';
+        targetCtx.fillRect(w*0.35, h*0.72, w*0.3, h*0.28);
+        targetCtx.fillStyle = '#dc2626';
+        targetCtx.beginPath();
+        targetCtx.moveTo(w*0.47, h*0.75); targetCtx.lineTo(w*0.53, h*0.75);
+        targetCtx.lineTo(w*0.54, h); targetCtx.lineTo(w*0.46, h); targetCtx.fill();
+        targetCtx.fillStyle = '#0f172a';
+        targetCtx.beginPath();
+        targetCtx.moveTo(w*0.05, h); targetCtx.lineTo(w*0.22, h*0.70);
+        targetCtx.lineTo(w*0.44, h); targetCtx.fill();
+        targetCtx.beginPath();
+        targetCtx.moveTo(w*0.95, h); targetCtx.lineTo(w*0.78, h*0.70);
+        targetCtx.lineTo(w*0.56, h); targetCtx.fill();
+      }
+
+      if (!isVip && credits <= 0) {
+        targetCtx.fillStyle = 'rgba(0,0,0,0.35)';
+        targetCtx.fillRect(0, h/2 - 18, w, 36);
+        targetCtx.fillStyle = '#fff';
+        targetCtx.font = 'bold 14px sans-serif';
+        targetCtx.textAlign = 'center';
+        targetCtx.fillText('ẢNH THẺ PRO - XEM QC ĐỂ XÓA', w/2, h/2 + 5);
+      }
+    }
+
+    function renderCanvas() {
+      if (viewMode === 'single') {
+        canvas.width = currentSize === '3x4' ? 354 : 472;
+        canvas.height = currentSize === '3x4' ? 472 : 708;
+        drawSinglePhoto(ctx, canvas.width, canvas.height);
+      } else {
+        // Trang in 10x15cm (1181 x 1772 px quy chuẩn thu gọn)
+        canvas.width = 600; canvas.height = 400;
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 600, 400);
+        const singleC = document.createElement('canvas');
+        singleC.width = 120; singleC.height = 160;
+        drawSinglePhoto(singleC.getContext('2d'), 120, 160);
+        const cols = currentSize === '3x4' ? 4 : 3;
+        const rows = 2;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x = 30 + c * 135; const y = 25 + r * 180;
+            ctx.drawImage(singleC, x, y);
+            ctx.strokeStyle = '#cbd5e1'; ctx.strokeRect(x, y, 120, 160);
+          }
+        }
+      }
+    }
+
+    function watchAd() {
+      alert('Đang phát quảng cáo 5 giây... Cảm ơn bạn đã ủng hộ!');
+      credits++;
+      document.getElementById('creditCount').innerText = credits;
+      renderCanvas();
+    }
+
+    function openVipModal() { document.getElementById('vipModal').classList.remove('hidden'); }
+    function closeVipModal() { document.getElementById('vipModal').classList.add('hidden'); }
+    function activateVip() {
+      isVip = true;
+      document.getElementById('vipBadge').innerText = '👑 Tài Khoản VIP';
+      document.getElementById('creditCount').innerText = 'Vô hạn';
+      closeVipModal();
+      renderCanvas();
+      alert('Đã kích hoạt VIP thành công!');
+    }
+
+    function downloadPhoto() {
+      if (!isVip && credits <= 0) {
+        alert('Bạn đã hết lượt tải HD miễn phí. Hãy bấm "Xem QC" hoặc nâng cấp VIP 10.000đ nhé!');
+        return;
+      }
+      if (!isVip) {
+        credits--;
+        document.getElementById('creditCount').innerText = credits;
+      }
+      const link = document.createElement('a');
+      link.download = `anh-the-${currentSize}-${viewMode}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      renderCanvas();
+    }
+  </script>
+</body>
+</html>
