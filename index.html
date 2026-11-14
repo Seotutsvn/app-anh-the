@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Ảnh Thẻ Pro 3x4 & 4x6</title>
   <meta name="theme-color" content="#1e40af" />
-  <link rel="manifest" href="data:application/manifest+json,{"name":"Ảnh Thẻ Pro","short_name":"Ảnh Thẻ","start_url":".","display":"standalone","background_color":"#ffffff","theme_color":"#1e40af"}" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen font-sans select-none">
@@ -21,28 +20,35 @@
 
     <!-- Main Content -->
     <main class="p-4 flex-1 space-y-4">
-      <!-- Nút Chọn / Chụp Ảnh -->
+      <!-- Nút Chụp Ảnh & Chọn Ảnh (Tương thích 100% Android WebView) -->
       <div class="grid grid-cols-2 gap-2">
-        <button onclick="startCamera()" class="bg-blue-600 active:bg-blue-700 text-white font-semibold py-2.5 px-3 rounded-xl text-sm flex items-center justify-center gap-1 shadow">
-          📷 Bật Camera Chụp
-        </button>
+        <label class="bg-blue-600 active:bg-blue-700 text-white font-semibold py-2.5 px-3 rounded-xl text-sm flex items-center justify-center gap-1 shadow cursor-pointer text-center">
+          📷 Chụp Ảnh Ngay
+          <input type="file" id="cameraInput" accept="image/*" capture="user" class="hidden" onchange="handleFileUpload(event)" />
+        </label>
         <label class="bg-slate-800 active:bg-slate-900 text-white font-semibold py-2.5 px-3 rounded-xl text-sm flex items-center justify-center gap-1 shadow cursor-pointer text-center">
-          🖼️ Chọn Ảnh Có Sẵn
+          🖼️ Chọn Từ Thư Viện
           <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileUpload(event)" />
         </label>
+      </div>
+
+      <!-- Nút phụ mở Live Camera (nếu trình duyệt hỗ trợ) -->
+      <div class="text-center">
+        <button onclick="startCamera()" class="text-xs text-blue-600 underline font-medium">
+          Hoặc bật khung ngắm trực tiếp (Live Camera)
+        </button>
       </div>
 
       <!-- Khung Camera trực tiếp (Ẩn mặc định) -->
       <div id="cameraBox" class="hidden relative bg-black rounded-2xl overflow-hidden aspect-[3/4] max-w-[260px] mx-auto border-2 border-blue-500">
         <video id="video" autoplay playsinline class="w-full h-full object-cover transform scale-x-[-1]"></video>
-        <!-- Khung căn mặt & vai -->
         <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
           <div class="w-32 h-40 border-2 border-dashed border-emerald-400 rounded-full mb-6"></div>
           <div class="w-52 h-16 border-t-2 border-dashed border-emerald-400 rounded-t-3xl"></div>
           <span class="absolute bottom-14 bg-black/60 text-white text-[11px] px-2 py-0.5 rounded">Căn đầu và vai vào khung xanh</span>
         </div>
         <div class="absolute bottom-2 inset-x-0 flex justify-center gap-3">
-          <button onclick="takeSnapshot()" class="bg-emerald-500 text-white font-bold px-5 py-1.5 rounded-full text-sm shadow-lg">Chụp Ngay</button>
+          <button onclick="takeSnapshot()" class="bg-emerald-500 text-white font-bold px-5 py-1.5 rounded-full text-sm shadow-lg">Chụp</button>
           <button onclick="stopCamera()" class="bg-red-500 text-white px-3 py-1.5 rounded-full text-xs">Đóng</button>
         </div>
       </div>
@@ -54,12 +60,11 @@
           <button onclick="setMode('sheet')" id="btnSheet" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-200 text-slate-700">Ghép Trang In (10×15cm)</button>
         </div>
         <canvas id="photoCanvas" width="354" height="472" class="shadow-md border border-slate-300 bg-white max-w-[220px] h-auto rounded"></canvas>
-        <p class="text-[11px] text-slate-500 mt-2 text-center">⚠️ Lưu ý: Vui lòng kiểm tra yêu cầu phông nền của nơi nhận hồ sơ.</p>
+        <p class="text-[11px] text-slate-500 mt-2 text-center">⚠️ Lưu ý: Kiểm tra kỹ yêu cầu phông nền của nơi nhận hồ sơ.</p>
       </div>
 
       <!-- Bảng Điều Khiển Chỉnh Sửa -->
       <div class="bg-slate-50 p-3 rounded-2xl border space-y-3 text-sm">
-        <!-- Kích thước & Phông nền -->
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="font-semibold text-xs text-slate-600 block mb-1">Kích thước:</label>
@@ -71,9 +76,9 @@
           <div>
             <label class="font-semibold text-xs text-slate-600 block mb-1">Đổi màu nền:</label>
             <div class="flex gap-1.5 items-center h-8">
-              <button onclick="setBg('#1e62d0')" class="w-7 h-7 rounded-full bg-[#1e62d0] border-2 border-slate-300 shadow" title="Xanh chuẩn"></button>
-              <button onclick="setBg('#ffffff')" class="w-7 h-7 rounded-full bg-white border-2 border-slate-400 shadow" title="Nền trắng"></button>
-              <button onclick="setBg('#38bdf8')" class="w-7 h-7 rounded-full bg-sky-400 border-2 border-slate-300 shadow" title="Xanh nhạt"></button>
+              <button onclick="setBg('#1e62d0')" class="w-7 h-7 rounded-full bg-[#1e62d0] border-2 border-slate-300 shadow"></button>
+              <button onclick="setBg('#ffffff')" class="w-7 h-7 rounded-full bg-white border-2 border-slate-400 shadow"></button>
+              <button onclick="setBg('#38bdf8')" class="w-7 h-7 rounded-full bg-sky-400 border-2 border-slate-300 shadow"></button>
               <label class="text-xs flex items-center gap-1 ml-1 cursor-pointer">
                 <input type="checkbox" id="autoBgToggle" onchange="renderCanvas()" checked /> Tách nền
               </label>
@@ -81,7 +86,6 @@
           </div>
         </div>
 
-        <!-- Chỉnh vị trí, phóng to & độ sáng -->
         <div class="space-y-2 pt-1 border-t">
           <div class="flex items-center justify-between text-xs">
             <span>Phóng to / Thu nhỏ:</span>
@@ -106,10 +110,10 @@
         </div>
       </div>
 
-      <!-- Khu vực Tải ảnh & Kiếm tiền (Monetization) -->
+      <!-- Khu vực Lưu ảnh & Kiếm tiền -->
       <div class="space-y-2 pt-1">
-        <button onclick="downloadPhoto()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
-          ⬇️ Tải Ảnh Về Máy (Lượt tải HD: <span id="creditCount">1</span>)
+        <button onclick="savePhotoSafe()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
+          ⬇️ Lưu / Xuất Ảnh Nét HD (Còn: <span id="creditCount">2</span> lượt)
         </button>
         <div class="grid grid-cols-2 gap-2">
           <button onclick="watchAd()" class="bg-amber-500 active:bg-amber-600 text-white text-xs font-bold py-2.5 px-2 rounded-xl shadow">
@@ -123,11 +127,26 @@
     </main>
   </div>
 
+  <!-- Modal Lưu Ảnh An Toàn Cho Android WebView (Không bao giờ văng app) -->
+  <div id="saveModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl p-4 max-w-xs w-full text-center space-y-3">
+      <h3 class="font-bold text-base text-emerald-700">✅ Ảnh Đã Sẵn Sàng!</h3>
+      <p class="text-xs text-slate-600 bg-emerald-50 p-2 rounded-lg border border-emerald-200">
+        👉 <b>Cách lưu:</b> Nhấn giữ ngón tay vào bức ảnh bên dưới (2 giây) rồi chọn <b>"Tải hình ảnh xuống" / "Lưu ảnh"</b>, hoặc bấm nút Chia sẻ bên dưới.
+      </p>
+      <img id="finalPreviewImg" src="" alt="Ảnh thẻ hoàn chỉnh" class="max-h-60 mx-auto border shadow rounded" />
+      <div class="flex gap-2 pt-1">
+        <button onclick="shareImageNative()" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-xl text-xs">📤 Chia sẻ / Lưu vào máy</button>
+        <button onclick="closeSaveModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs">Đóng</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Thanh Toán VietQR 10k -->
   <div id="vipModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl p-5 max-w-xs w-full text-center space-y-3">
       <h3 class="font-bold text-lg text-purple-700">👑 Mở Khóa VIP Vĩnh Viễn</h3>
-      <p class="text-xs text-slate-600">Chỉ <b>10.000đ</b> - Xóa logo mờ, tải ảnh 3×4, 4×6 và trang in 10×15cm nét cao không giới hạn.</p>
+      <p class="text-xs text-slate-600">Chỉ <b>10.000đ</b> - Xóa logo mờ, xuất ảnh 3×4, 4×6 và trang in 10×15cm nét cao không giới hạn.</p>
       <div class="bg-slate-100 p-3 rounded-xl text-xs text-left space-y-1">
         <p><b>Ngân hàng:</b> MB Bank / MoMo</p>
         <p><b>Số TK:</b> 09xxxxxxxx (Thay số của bạn)</p>
@@ -144,12 +163,11 @@
     let userImg = null;
     let currentSize = '3x4';
     let bgColor = '#1e62d0';
-    let viewMode = 'single'; // 'single' | 'sheet'
-    let credits = 1;
+    let viewMode = 'single';
+    let credits = 2;
     let isVip = false;
     let stream = null;
 
-    // Tạo ảnh mẫu ban đầu
     window.onload = () => { renderCanvas(); };
 
     function setSize(size) {
@@ -170,11 +188,17 @@
 
     async function startCamera() {
       try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          document.getElementById('cameraInput').click();
+          return;
+        }
         document.getElementById('cameraBox').classList.remove('hidden');
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
         document.getElementById('video').srcObject = stream;
       } catch (e) {
-        alert('Không thể mở camera trực tiếp. Hãy chọn nút "Chọn Ảnh Có Sẵn" để chụp từ máy ảnh điện thoại!');
+        document.getElementById('cameraBox').classList.add('hidden');
+        // Tự động chuyển sang mở Camera gốc của điện thoại nếu WebView chặn
+        document.getElementById('cameraInput').click();
       }
     }
 
@@ -186,8 +210,8 @@
     function takeSnapshot() {
       const video = document.getElementById('video');
       const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = video.videoWidth;
-      tempCanvas.height = video.videoHeight;
+      tempCanvas.width = video.videoWidth || 480;
+      tempCanvas.height = video.videoHeight || 640;
       const tCtx = tempCanvas.getContext('2d');
       tCtx.translate(tempCanvas.width, 0);
       tCtx.scale(-1, 1);
@@ -229,7 +253,6 @@
         const nh = userImg.height * scale;
         oCtx.drawImage(userImg, (w - nw) / 2, (h - nh) / 2 + offsetY, nw, nh);
 
-        // Tách nền sáng màu tự động
         if (document.getElementById('autoBgToggle').checked) {
           const imgData = oCtx.getImageData(0, 0, w, h);
           const d = imgData.data;
@@ -242,13 +265,11 @@
         }
         targetCtx.drawImage(offscreen, 0, 0);
       } else {
-        // Hình mẫu mặc định
         targetCtx.fillStyle = 'rgba(255,255,255,0.85)';
         targetCtx.beginPath(); targetCtx.arc(w/2, h*0.38, w*0.22, 0, Math.PI*2); targetCtx.fill();
         targetCtx.beginPath(); targetCtx.arc(w/2, h*0.95, w*0.42, Math.PI, 0); targetCtx.fill();
       }
 
-      // Ghép Áo Sơ mi / Áo Vest
       if (suit === 'shirt') {
         targetCtx.fillStyle = '#f8fafc';
         targetCtx.beginPath();
@@ -267,7 +288,7 @@
         targetCtx.moveTo(w*0.05, h); targetCtx.lineTo(w*0.22, h*0.70);
         targetCtx.lineTo(w*0.44, h); targetCtx.fill();
         targetCtx.beginPath();
-        targetCtx.moveTo(w*0.95, h); targetCtx.lineTo(w*0.78, h*0.70);
+        targetCtx.moveTo(w*0.95, h); targetCtxCtx.lineTo(w*0.78, h*0.70);
         targetCtx.lineTo(w*0.56, h); targetCtx.fill();
       }
 
@@ -287,7 +308,6 @@
         canvas.height = currentSize === '3x4' ? 472 : 708;
         drawSinglePhoto(ctx, canvas.width, canvas.height);
       } else {
-        // Trang in 10x15cm (1181 x 1772 px quy chuẩn thu gọn)
         canvas.width = 600; canvas.height = 400;
         ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 600, 400);
         const singleC = document.createElement('canvas');
@@ -314,6 +334,8 @@
 
     function openVipModal() { document.getElementById('vipModal').classList.remove('hidden'); }
     function closeVipModal() { document.getElementById('vipModal').classList.add('hidden'); }
+    function closeSaveModal() { document.getElementById('saveModal').classList.add('hidden'); }
+
     function activateVip() {
       isVip = true;
       document.getElementById('vipBadge').innerText = '👑 Tài Khoản VIP';
@@ -323,7 +345,8 @@
       alert('Đã kích hoạt VIP thành công!');
     }
 
-    function downloadPhoto() {
+    // Hàm lưu ảnh an toàn tuyệt đối cho Android WebView (Không gọi URI data:image trực tiếp)
+    function savePhotoSafe() {
       if (!isVip && credits <= 0) {
         alert('Bạn đã hết lượt tải HD miễn phí. Hãy bấm "Xem QC" hoặc nâng cấp VIP 10.000đ nhé!');
         return;
@@ -332,11 +355,30 @@
         credits--;
         document.getElementById('creditCount').innerText = credits;
       }
-      const link = document.createElement('a');
-      link.download = `anh-the-${currentSize}-${viewMode}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      const dataUrl = canvas.toDataURL('image/png');
+      document.getElementById('finalPreviewImg').src = dataUrl;
+      document.getElementById('saveModal').classList.remove('hidden');
       renderCanvas();
+    }
+
+    // Hỗ trợ chia sẻ / lưu qua menu gốc của điện thoại Android
+    async function shareImageNative() {
+      try {
+        canvas.toBlob(async (blob) => {
+          const file = new File([blob], `anh-the-${currentSize}.png`, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'Ảnh Thẻ Pro',
+              text: 'Ảnh thẻ 3x4, 4x6 của tôi'
+            });
+          } else {
+            alert('Hãy nhấn giữ ngón tay vào bức ảnh (2 giây) rồi chọn "Tải hình ảnh xuống" nhé!');
+          }
+        }, 'image/png');
+      } catch (err) {
+        alert('Hãy nhấn giữ ngón tay vào bức ảnh (2 giây) rồi chọn "Tải hình ảnh xuống" nhé!');
+      }
     }
   </script>
 </body>
