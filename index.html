@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#1e40af" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen font-sans select-none">
+<body class="bg-slate-100 text-slate-800 min-h-screen font-sans">
   <div class="max-w-md mx-auto bg-white min-h-screen shadow-xl flex flex-col justify-between">
     <!-- Header -->
     <header class="bg-blue-700 text-white p-4 flex items-center justify-between shadow-md">
@@ -20,7 +20,7 @@
 
     <!-- Main Content -->
     <main class="p-4 flex-1 space-y-4">
-      <!-- Nút Chụp Ảnh & Chọn Ảnh (Tương thích 100% Android WebView) -->
+      <!-- Nút Chọn / Chụp Ảnh -->
       <div class="grid grid-cols-2 gap-2">
         <label class="bg-blue-600 active:bg-blue-700 text-white font-semibold py-2.5 px-3 rounded-xl text-sm flex items-center justify-center gap-1 shadow cursor-pointer text-center">
           📷 Chụp Ảnh Ngay
@@ -30,27 +30,6 @@
           🖼️ Chọn Từ Thư Viện
           <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileUpload(event)" />
         </label>
-      </div>
-
-      <!-- Nút phụ mở Live Camera (nếu trình duyệt hỗ trợ) -->
-      <div class="text-center">
-        <button onclick="startCamera()" class="text-xs text-blue-600 underline font-medium">
-          Hoặc bật khung ngắm trực tiếp (Live Camera)
-        </button>
-      </div>
-
-      <!-- Khung Camera trực tiếp (Ẩn mặc định) -->
-      <div id="cameraBox" class="hidden relative bg-black rounded-2xl overflow-hidden aspect-[3/4] max-w-[260px] mx-auto border-2 border-blue-500">
-        <video id="video" autoplay playsinline class="w-full h-full object-cover transform scale-x-[-1]"></video>
-        <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-          <div class="w-32 h-40 border-2 border-dashed border-emerald-400 rounded-full mb-6"></div>
-          <div class="w-52 h-16 border-t-2 border-dashed border-emerald-400 rounded-t-3xl"></div>
-          <span class="absolute bottom-14 bg-black/60 text-white text-[11px] px-2 py-0.5 rounded">Căn đầu và vai vào khung xanh</span>
-        </div>
-        <div class="absolute bottom-2 inset-x-0 flex justify-center gap-3">
-          <button onclick="takeSnapshot()" class="bg-emerald-500 text-white font-bold px-5 py-1.5 rounded-full text-sm shadow-lg">Chụp</button>
-          <button onclick="stopCamera()" class="bg-red-500 text-white px-3 py-1.5 rounded-full text-xs">Đóng</button>
-        </div>
       </div>
 
       <!-- Khung Canvas Hiển Thị Ảnh -->
@@ -110,10 +89,10 @@
         </div>
       </div>
 
-      <!-- Khu vực Lưu ảnh & Kiếm tiền -->
+      <!-- Khu vực Tải ảnh & Kiếm tiền -->
       <div class="space-y-2 pt-1">
-        <button onclick="savePhotoSafe()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
-          ⬇️ Lưu / Xuất Ảnh Nét HD (Còn: <span id="creditCount">2</span> lượt)
+        <button id="btnDownloadMain" onclick="savePhotoSafe()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
+          ⬇️ Tải Ảnh Về Máy (Còn: <span id="creditCount">2</span> lượt)
         </button>
         <div class="grid grid-cols-2 gap-2">
           <button onclick="watchAd()" class="bg-amber-500 active:bg-amber-600 text-white text-xs font-bold py-2.5 px-2 rounded-xl shadow">
@@ -127,22 +106,41 @@
     </main>
   </div>
 
-  <!-- Modal Lưu Ảnh An Toàn Cho Android WebView (Không bao giờ văng app) -->
-  <div id="saveModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+  <!-- Modal Tải Ảnh Đa Năng Cho Android WebView -->
+  <div id="saveModal" class="hidden fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl p-4 max-w-xs w-full text-center space-y-3">
       <h3 class="font-bold text-base text-emerald-700">✅ Ảnh Đã Sẵn Sàng!</h3>
-      <p class="text-xs text-slate-600 bg-emerald-50 p-2 rounded-lg border border-emerald-200">
-        👉 <b>Cách lưu:</b> Nhấn giữ ngón tay vào bức ảnh bên dưới (2 giây) rồi chọn <b>"Tải hình ảnh xuống" / "Lưu ảnh"</b>, hoặc bấm nút Chia sẻ bên dưới.
-      </p>
-      <img id="finalPreviewImg" src="" alt="Ảnh thẻ hoàn chỉnh" class="max-h-60 mx-auto border shadow rounded" />
-      <div class="flex gap-2 pt-1">
-        <button onclick="shareImageNative()" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-xl text-xs">📤 Chia sẻ / Lưu vào máy</button>
-        <button onclick="closeSaveModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs">Đóng</button>
+      <img id="finalPreviewImg" src="" alt="Ảnh thẻ" class="max-h-56 mx-auto border shadow rounded" />
+
+      <div id="statusBox" class="text-xs text-blue-700 bg-blue-50 p-2 rounded-lg border border-blue-200 font-medium">
+        ⏳ Đang tạo link tải trực tiếp cho điện thoại...
+      </div>
+
+      <div class="space-y-2 pt-1">
+        <!-- Nút tải bằng link https:// (WebIntoApp hỗ trợ 100% không bị crash) -->
+        <a id="directHttpsLink" href="#" target="_blank" download="anh-the.png" class="hidden block w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs shadow">
+          ⬇️ Bấm Vào Đây Để Tải Xuống Máy
+        </a>
+
+        <!-- Chế độ phóng to sạch 100% để chụp màn hình 3 ngón tay -->
+        <button onclick="openCleanView()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl text-xs shadow">
+          📱 Mở Ảnh Full Màn Hình (Để Chụp Lại)
+        </button>
+
+        <button onclick="closeSaveModal()" class="w-full bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs">
+          Đóng lại
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Modal Thanh Toán VietQR 10k -->
+  <!-- Khung Full Màn Hình Sạch (Để vuốt 3 ngón tay chụp màn hình nét 100%) -->
+  <div id="cleanModal" onclick="closeCleanView()" class="hidden fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-2">
+    <img id="cleanImg" src="" class="max-w-full max-h-[85vh] shadow-lg border border-slate-200" />
+    <p class="text-xs text-slate-400 mt-4">👉 Hãy vuốt 3 ngón tay chụp màn hình (Chạm vào đâu cũng được để thoát)</p>
+  </div>
+
+  <!-- Modal VIP -->
   <div id="vipModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl p-5 max-w-xs w-full text-center space-y-3">
       <h3 class="font-bold text-lg text-purple-700">👑 Mở Khóa VIP Vĩnh Viễn</h3>
@@ -166,7 +164,6 @@
     let viewMode = 'single';
     let credits = 2;
     let isVip = false;
-    let stream = null;
 
     window.onload = () => { renderCanvas(); };
 
@@ -184,41 +181,6 @@
       document.getElementById('btnSingle').className = mode === 'single' ? 'px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white' : 'px-3 py-1 rounded-lg text-xs font-bold bg-slate-200 text-slate-700';
       document.getElementById('btnSheet').className = mode === 'sheet' ? 'px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white' : 'px-3 py-1 rounded-lg text-xs font-bold bg-slate-200 text-slate-700';
       renderCanvas();
-    }
-
-    async function startCamera() {
-      try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          document.getElementById('cameraInput').click();
-          return;
-        }
-        document.getElementById('cameraBox').classList.remove('hidden');
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-        document.getElementById('video').srcObject = stream;
-      } catch (e) {
-        document.getElementById('cameraBox').classList.add('hidden');
-        // Tự động chuyển sang mở Camera gốc của điện thoại nếu WebView chặn
-        document.getElementById('cameraInput').click();
-      }
-    }
-
-    function stopCamera() {
-      if (stream) stream.getTracks().forEach(t => t.stop());
-      document.getElementById('cameraBox').classList.add('hidden');
-    }
-
-    function takeSnapshot() {
-      const video = document.getElementById('video');
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = video.videoWidth || 480;
-      tempCanvas.height = video.videoHeight || 640;
-      const tCtx = tempCanvas.getContext('2d');
-      tCtx.translate(tempCanvas.width, 0);
-      tCtx.scale(-1, 1);
-      tCtx.drawImage(video, 0, 0);
-      const img = new Image();
-      img.onload = () => { userImg = img; stopCamera(); renderCanvas(); };
-      img.src = tempCanvas.toDataURL('image/png');
     }
 
     function handleFileUpload(e) {
@@ -288,7 +250,7 @@
         targetCtx.moveTo(w*0.05, h); targetCtx.lineTo(w*0.22, h*0.70);
         targetCtx.lineTo(w*0.44, h); targetCtx.fill();
         targetCtx.beginPath();
-        targetCtx.moveTo(w*0.95, h); targetCtxCtx.lineTo(w*0.78, h*0.70);
+        targetCtx.moveTo(w*0.95, h); targetCtx.lineTo(w*0.78, h*0.70);
         targetCtx.lineTo(w*0.56, h); targetCtx.fill();
       }
 
@@ -336,6 +298,14 @@
     function closeVipModal() { document.getElementById('vipModal').classList.add('hidden'); }
     function closeSaveModal() { document.getElementById('saveModal').classList.add('hidden'); }
 
+    function openCleanView() {
+      document.getElementById('cleanImg').src = canvas.toDataURL('image/png');
+      document.getElementById('cleanModal').classList.remove('hidden');
+    }
+    function closeCleanView() {
+      document.getElementById('cleanModal').classList.add('hidden');
+    }
+
     function activateVip() {
       isVip = true;
       document.getElementById('vipBadge').innerText = '👑 Tài Khoản VIP';
@@ -345,8 +315,8 @@
       alert('Đã kích hoạt VIP thành công!');
     }
 
-    // Hàm lưu ảnh an toàn tuyệt đối cho Android WebView (Không gọi URI data:image trực tiếp)
-    function savePhotoSafe() {
+    // Tự động chuyển ảnh thành đường link https:// thật để Android DownloadManager tải về máy
+    async function savePhotoSafe() {
       if (!isVip && credits <= 0) {
         alert('Bạn đã hết lượt tải HD miễn phí. Hãy bấm "Xem QC" hoặc nâng cấp VIP 10.000đ nhé!');
         return;
@@ -355,30 +325,38 @@
         credits--;
         document.getElementById('creditCount').innerText = credits;
       }
+
       const dataUrl = canvas.toDataURL('image/png');
       document.getElementById('finalPreviewImg').src = dataUrl;
       document.getElementById('saveModal').classList.remove('hidden');
       renderCanvas();
-    }
 
-    // Hỗ trợ chia sẻ / lưu qua menu gốc của điện thoại Android
-    async function shareImageNative() {
-      try {
-        canvas.toBlob(async (blob) => {
-          const file = new File([blob], `anh-the-${currentSize}.png`, { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: 'Ảnh Thẻ Pro',
-              text: 'Ảnh thẻ 3x4, 4x6 của tôi'
-            });
-          } else {
-            alert('Hãy nhấn giữ ngón tay vào bức ảnh (2 giây) rồi chọn "Tải hình ảnh xuống" nhé!');
+      const statusBox = document.getElementById('statusBox');
+      const httpsBtn = document.getElementById('directHttpsLink');
+      httpsBtn.classList.add('hidden');
+      statusBox.innerText = '⏳ Đang tạo link tải https:// cho điện thoại...';
+
+      canvas.toBlob(async (blob) => {
+        try {
+          const formData = new FormData();
+          formData.append('files[]', blob, `anh-the-${currentSize}.png`);
+          // Sử dụng dịch vụ lưu file tạm thời qua giao thức https chuẩn
+          const res = await fetch('https://uguu.se/upload.php', { method: 'POST', body: formData });
+          const data = await res.json();
+          if (data && data.files && data.files[0] && data.files[0].url) {
+            const fileUrl = data.files[0].url;
+            httpsBtn.href = fileUrl;
+            httpsBtn.classList.remove('hidden');
+            statusBox.innerText = '✅ Đã tạo xong! Bấm nút màu xanh lá bên dưới để tải thẳng về máy:';
+            // Tự động kích hoạt tải về
+            window.location.href = fileUrl;
+            return;
           }
-        }, 'image/png');
-      } catch (err) {
-        alert('Hãy nhấn giữ ngón tay vào bức ảnh (2 giây) rồi chọn "Tải hình ảnh xuống" nhé!');
-      }
+          throw new Error('Fallback');
+        } catch (err) {
+          statusBox.innerText = '💡 Hãy bấm nút "Mở Ảnh Full Màn Hình" bên dưới rồi vuốt 3 ngón tay chụp lại nét 100%!';
+        }
+      }, 'image/png');
     }
   </script>
 </body>
